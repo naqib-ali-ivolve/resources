@@ -1,0 +1,34 @@
+http://10.81.1.155/
+
+Copy Link Address of .OVA
+wget (address)
+ls (for all files to get file name and copy)
+tar xvf (filename.ova) to extract
+qemu-img convert -O qcow2 (filename.vmdk) (filename.qcow2)
+ls (get all files)
+remove rm (filename without qcow2 extensions)
+rename files with short names (mv oldname newname)
+source sahalrc
+Then upload images to OpenStack Glance
+openstack image create --public --disk-format qcow2 --container-format bare --file publify-bitnami.qcow2 publify-bitnami
+
+To check uploaded image create instance
+In instance most right drop down (select first)
+Click + in IP (If no IP available)
+Allocate IP
+Associate IP
+Copy IP Address and paste in webpage
+If opens its GOOD if not BAD
+
+Open Console of Instance
+full screen
+debian login: bitnami
+password: bitnami (dont change password)
+cat bitnami (and press tab) which will change to bitnami_crediantials
+Get username and password and enter into the webpage with copied IP Address
+If Logged In GOOD if not then BAD
+
+Checking Database:
+sudo su
+mysql -u root -p(password)
+

@@ -1,0 +1,58 @@
+ssh stack@(Undercloud IP)
+
+{
+Commands realted to Creating a Project and a user in it:
+Project -> User
+So for adding first Project is created and then User
+So for deleting first User is deleted and then Project
+
+openstack project list
+openstack project create --domain default --description 'project description' new-project
+openstack project show PROJECT_ID
+openstack project delete PROJECT_ID
+
+openstack user list
+openstack user create --project new-project --password PASSWORD new-user
+e.g. (openstack user create --project raheel-proj2 --password admin0101 raheel-returns)
+openstack user delete USER_NAME
+openstack role list
+openstack role create new-role
+openstack role add --user USER_NAME --project PROJECT_NAME ROLE_NAME
+e.g. (openstack role add --user raheel-returns --project raheel-proj2 member)
+openstack role remove --user USER_NAME --project TENANT_ID ROLE_NAME
+}
+
+
+{
+Flavor related commands:
+openstack flavor list
+openstack flavor create FLAVOR_NAME --id FLAVOR_ID --ram RAM_IN_MB --disk ROOT_DISK_IN_GB --vcpus NUMBER_OF_VCPUS
+e.g. (openstack flavor create --id 0 --ram 512 --vcpus 1 --disk 10  m1.tiny)
+openstack flavor delete FLAVOR_ID
+}
+
+
+{
+Launching Instance from Image:
+openstack image list
+openstack server list
+
+openstack server create --flavor FLAVOR_ID --image IMAGE_ID --key-name KEY_NAME \
+  --user-data USER_DATA_FILE --security-group SEC_GROUP_NAME --property KEY=VALUE \
+  INSTANCE_NAME
+  
+openstack server create --flavor 1 --image 397e713c-b95b-4186-ad46-6126863ea0a9 \
+  --security-group default --key-name KeyPair01 --user-data cloudinit.file \
+  myCirrosServer
+}
+
+
+
+
+
+
+
+
+
+
+

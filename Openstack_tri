@@ -1,0 +1,239 @@
+﻿Undercloud Node: 12GB  RAM, 4VCPUs, Storage size  80GB  
+
+ 
+
+2 Overcloud Nodes:  
+
+Control & Compute: 12GB RAM, 4 VCPUs, Storage size 50 GB (For each node) 
+
+UnderCloud on CentOS 7 
+
+ 
+
+ 
+
+yum update -y && reboot 
+
+useradd stack 
+
+passwd stack   #specify a password 
+
+echo "stack ALL=(root) NOPASSWD: ALL" | sudo tee -a /etc/sudoers.d/stack 
+
+sudo chmod 0440 /etc/sudoers.d/stack 
+
+su - stack 
+
+ 
+
+Download and install the python2-tripleo-repos 
+
+sudo yum install –y \ 
+
+https://trunk.rdoproject.org/centos7/current/python2-tripleo-repos-0.0.1-0.20200409224957.8bac392.el7.noarch.rpm  
+
+ 
+
+Enable the appropriate repos for the desired release, 
+
+sudo -E tripleo-repos -b stein current 
+
+ 
+
+#Install the TripleO CLI Packages 
+
+sudo yum install -y python-tripleoclient 
+
+cp /usr/share/python-tripleoclient/undercloud.conf.sample ~/undercloud.conf 
+
+openstack undercloud install 
+
+source stackrc  
+
+openstack service list 
+
+ 
+
+ 
+
+ 
+
+Overcloud (Controller, Compute) on CentOS 7 
+
+ 
+
+ 
+
+Download and Import Overcloud images(Use Any One Method) 
+
+ 
+
+export DIB_YUM_REPO_CONF="/etc/yum.repos.d/delorean*" 
+
+openstack overcloud image build 
+
+openstack overcloud image upload 
+
+ 
+
+ 
+
+mkdir ~/images 
+
+cd images 
+
+curl -O https://images.rdoproject.org/queens/delorean/current-tripleo-rdo/ironic-python-agent.tar 
+
+curl -O https://images.rdoproject.org/queens/delorean/current-tripleo-rdo/overcloud-full.tar 
+
+tar xvf ironic-python-agent.tar 
+
+tar xvf overcloud-full.tar 
+
+cd 
+
+openstack overcloud image upload --image-path /home/stack/images/ 
+
+openstack image list 
+
+ 
+
+Add DNS Server in the undercloud network 
+
+ 
+
+ 
+
+openstack subnet show <subnet’s id> 
+
+openstack subnet set ctlplane-subnet --dns-nameserver 8.8.8.8 
+
+openstack subnet show ctlplane-subnet #Check if dns id added now  
+
+ 
+
+Install and Configure vbmc (Virtual BMC) on undercloud 
+
+        
+
+sudo yum install python-virtualbmc -y 
+
+ssh-copy-id root@<host’s ip> 
+
+vbmc add compute --port 6001 --username admin --password password --libvirt-uri qemu+ssh://root@<host’s ip>/system 
+
+vbmc add control --port 6002 --username admin --password password --libvirt-uri qemu+ssh://root@<host’s ip>/system 
+
+vbmc start compute 
+
+Vbmc start control 
+
+vbmc list #The status of both vms should be running 
+
+ 
+
+To view power status of VM & switch it off/on 
+
+ipmitool -I lanplus -U admin -P password -H 192.168.24.1 -p 6001 power status 
+
+ipmitool -I lanplus -U admin -P password -H 192.168.24.1 -p 6001 power on 
+
+ipmitool -I lanplus -U admin -P password -H 192.168.24.1 -p 6002 power status 
+
+ 
+
+vi instackenv.json 
+
+ 
+
+{ 
+
+"nodes": [ 
+
+{ 
+
+"name": "controller", 
+
+"pm_password": "password", 
+
+"pm_type": "ipmi", 
+
+"pm_user": "admin", 
+
+"pm_addr": "192.168.24.1", 
+
+"pm_port": "6002", 
+
+"mac": [ 
+
+"00:0d:f4:6c:b2:a2" 
+
+], 
+
+"cpu": "2", 
+
+"memory": "8192", 
+
+"disk": "50", 
+
+"arch": "x86_64", 
+
+"capabilities": "profile:controller,boot_option:local" 
+
+} 
+
+, 
+
+{ 
+
+"name": "compute", 
+
+"pm_password": "password", 
+
+"pm_type": "ipmi", 
+
+"pm_user": "admin", 
+
+"pm_addr": "192.168.24.1", 
+
+"pm_port": "6001", 
+
+"mac": [ 
+
+"00:0d:f4:6c:b2:a6" 
+
+],  
+
+ 
+
+"cpu": "2", 
+
+"memory": "8192", 
+
+"disk": "50", 
+
+"arch": "x86_64", 
+
+"capabilities": "profile:compute,boot_option:local" 
+
+} 
+
+] 
+
+} 
+
+ 
+
+openstack overcloud node import --introspect --provide instackenv.json 
+
+openstack overcloud deploy --templates 
+
+ 
+
+Links: https://docs.openstack.org/tripleo-docs/latest/install/installation/installing.html 
+
+https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/deployment/install_undercloud.html 
+
+https://docs.openstack.org/tripleo-docs/latest/install/basic_deployment/basic_deployment_cli.html 
+https://www.linuxtechi.com/install-tripleo-undercloud-centos-7/
+ 
